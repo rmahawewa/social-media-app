@@ -18,18 +18,36 @@ app.use(express.json()); // Add this line
 //     }
 // });
 
-app.use("/admin", adminAuth);
+// app.use("/admin", adminAuth);
 
-app.get("/user",userAuth, (req, res) => {
-    res.send("User data sent");
+// app.get("/user",userAuth, (req, res) => {
+//     res.send("User data sent");
+// });
+
+// app.get("/admin/getAllData", (req, res) => {
+//     res.send("All data sent");
+// });
+
+// app.get("/admin/deleteUser", (req, res) => {
+//     res.send("deleted a user");
+// });
+
+app.get("/getUserData", (req, res) => {
+    try {
+        //Logic of DB call and get user data
+
+        throw new Error("this is a random error");
+        res.send("User data sent");
+    } catch {
+        res.status(500).send("something went wrong 1");
+    }
+    
 });
 
-app.get("/admin/getAllData", (req, res) => {
-    res.send("All data sent");
-});
-
-app.get("/admin/deleteUser", (req, res) => {
-    res.send("deleted a user");
+app.use("/", (err, req, res, next) => {
+    if (err) {
+        res.status(500).send("something went wrong 2");
+    }
 });
 
 app.listen(3000, () => {
