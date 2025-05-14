@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/rmahawewa/social-media-app#readme",
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "mongoose": "^8.14.2"
   }
 }
