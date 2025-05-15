@@ -35,7 +35,106 @@ app.post("/signup", async (req, res) => {
         res.status(400).send("Error saving the user:" + err.message);
     }
     
-})
+});
+
+// Get user by email
+app.get("/user", async (req, res) => {
+    const useremail = req.body.emailId;
+
+    try{
+        const user = await User.findOne({ emailId: useremail });
+        if(!user){
+            res.status(404).send("User not found");
+        }else{
+            res.send(user);
+        }
+        
+        // const users = await User.find({ emailId: useremail });
+        // if(users.length === 0){
+        //     res.status(404).send("User not found");
+        // }else{
+        //     res.send(users);
+        // }        
+    }
+    catch(err){
+        res.status(400).send("Something went wrong ", err.message);
+    }
+});
+
+// Feed API - GET /feed - get all the users from the database
+app.get("/feed", async (req, res) => {
+
+    try{
+        const users = await User.find({});
+        if(users.length === 0){
+            res.status(404).send("Not found");
+        }
+        else{
+            res.send(users);
+        }
+    }
+    catch(err){
+        res.status(400).send("Something went wrong ", err.message);
+    }
+        
+});
+
+app.get("/userByID", async (req, res) => {
+    let userID = req.body._id;
+    try{
+        const user = await User.findById(userID);
+        if(user){
+            res.send(user);
+        }else{
+            res.status(404).send("User not found");
+        }
+    }
+    catch(err){
+        res.status(400).send("Something went wrong ", err.message);
+    }    
+});
+
+// Delete user from DB
+app.delete("/user", async (req, res) => {
+    try{
+        let userId = req.body.userId;
+        let user = await User.findByIdAndDelete(userId);
+        res.send("User deleted successfully");
+    }
+    catch(err){
+        res.status(400).send("Something went wrong ", err.message);
+    }    
+});
+
+// Update user from DB 
+app.patch("/user", async (req, res) => {
+    let userId = req.body.userId;
+    let data = req.body;
+    try{
+        let user = await User.findByIdAndUpdate({ _id: userId }, data, { returnDocument: 'after' });
+        console.log(user);
+        res.send("User updated successfully");
+    }
+    catch(err){
+        res.status(400).send("Something went wrong. ", err.message);
+    }
+});
+
+// Update user with email id
+app.patch("/byUserEmail", async (req, res) => {
+    let emailId = req.body.emailId;
+    let data = req.body;
+    console.log(emailId);
+    try{
+        let user = await User.findOneAndUpdate({ emailId: emailId }, data, { returnDocument: 'after' });
+        console.log(user);
+        res.send("User updated successfully.");
+    }
+    catch(err){
+        res.status(400).send("Something went wrong. ", err.message);
+    }
+});
+
 
 connectDB()
     .then(() => {
