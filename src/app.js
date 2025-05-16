@@ -1,5 +1,6 @@
 const express = require("express");
 const connectDB = require("./config/database.js");
+const validator = require('validator');
 const User = require("./models/user");
 const app = express();
 
@@ -7,7 +8,7 @@ app.use(express.json());
 
 app.post("/signup", async (req, res) => {
     console.log(req.body);
-    const user = new User(req.body);
+    
     
     // const userObj = {
     //     firstName: "Virat",
@@ -28,6 +29,13 @@ app.post("/signup", async (req, res) => {
     //     password: "rdm@12345"
     // });
     try {
+        // if(!validator.isEmail(req.body.emailId)){
+        //     throw new Error("Email is not valid");
+        // }
+        if(req.body.skills?.length > 10){
+            throw new Error("Skills count can not exeed ten");
+        }
+        const user = new User(req.body);
         await user.save();
         res.send("User added successfully");
     }
@@ -107,16 +115,36 @@ app.delete("/user", async (req, res) => {
 });
 
 // Update user from DB 
-app.patch("/user", async (req, res) => {
-    let userId = req.body.userId;
+app.patch("/user/:userId", async (req, res) => {
+    let userId = req.params?.userId;
     let data = req.body;
     try{
-        let user = await User.findByIdAndUpdate({ _id: userId }, data, { returnDocument: 'after' });
+        const ALLOWED_UPDATE = [
+            "photoUrl",
+            "about",
+            "gender",
+            "age",
+            "skills",
+        ];
+        const isUpdateAllowed = Object.keys(data).every((k) => 
+            ALLOWED_UPDATE.includes(k)
+        );
+        if (!isUpdateAllowed) {
+            console.log("Update is not allowed");
+            throw new Error("Update not allowed");
+        }
+        if(req.body.skills?.length > 10){
+            throw new Error("Skills can not be more than 10");
+        }
+        let user = await User.findByIdAndUpdate({ _id: userId }, data, { 
+            returnDocument: 'after',
+            // runValidators: true,
+        });
         console.log(user);
         res.send("User updated successfully");
     }
     catch(err){
-        res.status(400).send("Something went wrong. ", err.message);
+        res.send(err.message);
     }
 });
 
