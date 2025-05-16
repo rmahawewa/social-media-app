@@ -2,47 +2,67 @@ const express = require("express");
 const connectDB = require("./config/database.js");
 const validator = require('validator');
 const User = require("./models/user");
+const { validateSignUpData, validateLoginData } = require("./utils/validation.js");
+const bcrypt = require('bcrypt');
 const app = express();
 
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
     console.log(req.body);
-    
-    
-    // const userObj = {
-    //     firstName: "Virat",
-    //     lastName: "Koli",
-    //     emailId: "vk@yahoo.com",
-    //     password: "kolibhai",
-        // _id: "44445555698745245896",
-    // }
-
-    // Creating a new instance of the User model
-    // const user = new User(userObj);
-
-    // or
-    // const user1 =new User({
-    //     firstName: "Ravini",
-    //     lastName: "Mahawewa",
-    //     emailId: "rmahawewa@yahoo.com",
-    //     password: "rdm@12345"
-    // });
     try {
+        // Validation of data
+        validateSignUpData(req);
+
+        //Encrypting password
+        const { firstName, lastName, emailId, password } = req.body;
+        const passwordHash = await bcrypt.hash(password, 10);
+        console.log(passwordHash);
+
+    
         // if(!validator.isEmail(req.body.emailId)){
         //     throw new Error("Email is not valid");
         // }
         if(req.body.skills?.length > 10){
             throw new Error("Skills count can not exeed ten");
         }
-        const user = new User(req.body);
+        const user = new User({
+            firstName,
+            lastName,
+            emailId,
+            password: passwordHash,
+        });
         await user.save();
         res.send("User added successfully");
     }
     catch(err){
-        res.status(400).send("Error saving the user:" + err.message);
+        res.status(400).send("ERROR: " + err.message);
     }
     
+});
+
+app.post("/login", async (req, res) => {
+    try{
+        const { emailId, password } = req.body;
+        // Validation of data
+        validateLoginData(req);
+
+        const user = await User.findOne({ emailId: emailId });
+        if(!user){
+            throw new Error("Invalid credencials");
+        }
+        
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if(isValidPassword){
+            res.send("Login Successfull...");
+        }
+        else{
+            throw new Error("Invalid credencials");
+        }
+    }
+    catch(err){
+        res.status(400).send("ERROR: " + err.message );
+    }
 });
 
 // Get user by email
